@@ -14,7 +14,7 @@ const routes = [
   {
     path: '/',
     name: 'root',
-    redirect: '/login'
+    redirect: '/login',
   },
 
   {
@@ -26,7 +26,7 @@ const routes = [
   {
     path: '/register',
     name: 'register',
-    component: Register
+    component: Register,
   },
 
   {
@@ -34,7 +34,7 @@ const routes = [
     name: 'rooms',
     component: Rooms,
     meta: {
-      needsAuth: true
+      needsAuth: true,
     },
   },
 
@@ -43,7 +43,7 @@ const routes = [
     name: 'room',
     component: Room,
     meta: {
-      needsAuth: true
+      needsAuth: true,
     },
   },
 
@@ -52,37 +52,36 @@ const routes = [
     name: 'Details',
     component: Details,
     meta: {
-      needsAuth: true
+      needsAuth: true,
     },
   },
 
-
-
-  { path: '/:notFound(.*)', component: NotFound }
+  { path: '/:notFound(.*)', component: NotFound },
 ];
 
 const router = new VueRouter({
   mode: 'history',
   base: process.env.BASE_URL,
-  routes
+  routes,
 });
 
 router.beforeEach(async (to, from, next) => {
   if (to.meta.needsAuth) {
     const isAuthenticated = await store.getters.isAuthenticated;
-    if (
-      isAuthenticated
-    ) {
+    if (isAuthenticated) {
       next();
     } else next('/login');
   } else {
     let isAuthenticated = await store.getters.isAuthenticated;
-    if (isAuthenticated && (to.path == '/login' || to.path == '/register' || to.path == '/')) {
+    if (
+      isAuthenticated &&
+      (to.path === '/login' || to.path === '/register' || to.path === '/')
+    ) {
       next('/rooms');
     } else {
       next();
     }
-  };
+  }
 });
 
-export default router
+export default router;

@@ -8,12 +8,16 @@
 </template>
 
 <script>
-import Lobby from "../components/Lobby";
+import Lobby from '../components/Lobby';
 
 export default {
-  name: "App",
+  name: 'App',
   components: {
     Lobby,
+  },
+
+  data() {
+    return {};
   },
 };
 </script>

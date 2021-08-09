@@ -1,11 +1,15 @@
 <template>
   <div id="container">
     <router-link to="/rooms" class="btn btn-primary">Go back</router-link>
-    <div class="alert alert-danger mt-2" role="alert" v-if="error_messages">
-      you are in guest mode, please go back and join the game.
-    </div>
+    <alert-component
+      v-if="request_response.request_error"
+      :response-message="request_response.request_msg"
+      :alert-role="request_response.alert_role"
+      :alert-error-msg="request_response.alert_error_msg"
+      :alert-class="request_response.alert_class"
+    ></alert-component>
 
-    <div class="vote">
+    <div class="vote" v-if="getRoomUsers">
       <ul id="voteList">
         <li
           v-for="(vote, index) in validVotes"
@@ -16,6 +20,17 @@
         </li>
       </ul>
     </div>
+
+    <div v-else>
+      <alert-component
+        response-message="This room does not exist."
+        alert-role="alert"
+        alert-error-msg="Not Found!"
+        alert-class="alert-danger"
+        class="mt-4"
+      ></alert-component>
+    </div>
+
     <div class="members">
       <h3>
         Room #<strong>{{ this.$route.params.roomId }}</strong>
@@ -24,12 +39,12 @@
       </h3>
       <ul id="memberList" v-if="getRoomUsers.length > 0">
         <li :key="index" v-for="(member, index) in getRoomUsers">
-          <div class="status">{{ member.pivot.voted ? "✅" : "" }}</div>
+          <div class="status">{{ member.pivot.voted ? '✅' : '' }}</div>
           <div class="name">
             {{ member.name }} {{ userAuthenticated(member.id) }}
           </div>
           <div class="vote">
-            {{ member.pivot.vote_value != 0 ? member.pivot.vote_value : "-" }}
+            {{ member.pivot.vote_value != 0 ? member.pivot.vote_value : '-' }}
           </div>
         </li>
       </ul>
@@ -47,67 +62,94 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters } from 'vuex';
+import AlertComponent from './AlertComponent';
 export default {
-  name: "Lobby",
+  components: {
+    AlertComponent,
+  },
+  name: 'Lobby',
   data() {
     return {
-      validVotes: [1, 2, 3, 5, 8, 13, 20, 40, "?"],
+      validVotes: [1, 2, 3, 5, 8, 13, 20, 40, '?'],
       members: [
-        { name: "Julian (you)", vote: false },
-        { name: "Flor", vote: false },
-        { name: "Gino", vote: false },
+        { name: 'Julian (you)', vote: false },
+        { name: 'Flor', vote: false },
+        { name: 'Gino', vote: false },
       ],
       responsesDemo: {
         php: null,
         node: null,
       },
       voted: null,
-      error_messages: false,
+      request_response: {},
     };
   },
   computed: {
-    ...mapGetters(["getRoomUsers", "getVoteRes"]),
+    ...mapGetters('room', ['getRoomUsers', 'getVoteRes']),
   },
 
   methods: {
     userAuthenticated(id) {
-      const user_authenticated = JSON.parse(localStorage.getItem("user"));
+      const user_authenticated = JSON.parse(localStorage.getItem('user'));
       if (user_authenticated.id == id) {
-        return "(You)";
-      } else return "(Player)";
+        return '(You)';
+      } else return '(Player)';
     },
 
-    giveVote(vote, event) {
+    async giveVote(vote, event) {
       if (!this.voted) {
-        const joined_to = JSON.parse(localStorage.getItem("joined_to"));
+        const joined_to = JSON.parse(localStorage.getItem('joined_to'));
         if (joined_to && joined_to.includes(this.$route.params.roomId)) {
-          event.target.classList.toggle("voted");
-          this.voted = true;
+          event.target.classList.toggle('voted');
 
           try {
-            this.$store.dispatch("setVote", { vote });
+            console.log('Entra esta mierda!!!')
+            const result = await this.$store.dispatch('room/setVote', { vote : vote });
+            if (typeof result === 'string') {
+              this.showAlertError(
+                true,
+                result,
+                'alert',
+                'Voting Error!',
+                'alert-danger'
+              );
+            } else {
+              this.voted = true;
+            }
           } catch (error) {
-            console.log(error);
+            this.showAlertError(
+              true,
+              'please contact the administrator',
+              'alert',
+              'Fatal error!',
+              'alert-danger'
+            );
           }
-        } else {
-          this.error_messages = true;
-          setTimeout(() => {
-            this.error_messages = false;
-          }, 5000);
         }
       }
+    },
+
+    showAlertError(reqE, reqM, aleRol, aleErr, aleClass) {
+      this.request_response = {
+        request_error: reqE,
+        request_msg: reqM,
+        alert_role: aleRol,
+        alert_error_msg: aleErr,
+        alert_class: aleClass,
+      };
+      setTimeout(() => {
+        this.request_response['request_error'] = false;
+      }, 4000);
     },
   },
 
   async beforeCreate() {
-    await this.$store.dispatch("getRoomUsers", {
+    await this.$store.dispatch('room/getRoomUsers', {
       id: this.$route.params.roomId,
     });
   },
 };
 </script>
 
-
-<style scoped>
-</style>
+<style scoped></style>

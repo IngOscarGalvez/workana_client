@@ -1,18 +1,16 @@
 <template>
   <div class="wrapper-room">
-    <div class="index-circle"> => </div>
+    <div class="index-circle">=></div>
     <div class="form-group" role="group">
       <p>
-        <span><strong>{{ name }}</strong></span>
+        <span
+          ><strong>{{ name }}</strong></span
+        >
       </p>
     </div>
-    <button
-      class="btn btn-success set-position-button-value"
-      
-    >
-      {{value}}
+    <button class="btn btn-success set-position-button-value">
+      {{ value }}
     </button>
-    
   </div>
 </template>
 
@@ -22,22 +20,17 @@ export default {
     name: {
       type: String,
       required: true,
-      description: "Detail Name",
+      description: 'Detail Name',
     },
-    
+
     value: {
-      
       required: true,
-      description: "Detail Value",
+      description: 'Detail Value',
     },
   },
 
   data() {
     return {};
-  },
-
-  methods: {
-    
   },
 };
 </script>
@@ -103,8 +96,6 @@ export default {
   transition: all 300ms ease-out;
   transform: scale(0.82);
 }
-
-
 
 .set-position-button-value:hover {
   transform: scale(1);

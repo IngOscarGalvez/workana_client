@@ -1,5 +1,13 @@
 <template>
   <div class="wrapper-room">
+    <alert-component
+      v-if="request_response.request_error"
+      :response-message="request_response.request_msg"
+      :alert-role="request_response.alert_role"
+      :alert-error-msg="request_response.alert_error_msg"
+      :alert-class="request_response.alert_class"
+    ></alert-component>
+
     <div class="index-circle">{{ id }}</div>
     <div class="form-group" role="group">
       <p>
@@ -15,7 +23,7 @@
     </button>
     <button
       class="btn btn-danger set-position-button-details"
-      @click="getDetails(id)"     
+      @click="getDetails(id)"
     >
       Details
     </button>
@@ -23,58 +31,95 @@
 </template>
 
 <script>
+import AlertComponent from './AlertComponent.vue';
 export default {
+  components: {
+    AlertComponent,
+  },
+
   props: {
     name: {
       type: String,
       required: true,
-      description: "room name",
+      description: 'room name',
     },
     id: {
       type: Number,
       required: true,
-      description: "room id",
+      description: 'room id',
     },
   },
 
   data() {
-    return {};
+    return {
+      request_response: {},
+    };
   },
 
   methods: {
     getGame(id) {
       this.$router.push({
-        name: "room",
+        name: 'room',
         params: { roomId: id },
       });
     },
 
     getDetails(id) {
       this.$router.push({
-        name: "Details",
+        name: 'Details',
         params: { roomId: id },
       });
     },
 
     async joinMe(id) {
       try {
-        this.$store.dispatch("joinMe", {
+        const result = await this.$store.dispatch('room/joinMe', {
           room_id: id,
         });
-        this.getGame(id);
-      } catch (error) {
-        console.log(error);
+
+        if (typeof result === 'string') {
+          this.showAlertError(
+            true,
+            result,
+            'alert',
+            'Impossible to Join!',
+            'alert-info'
+          );
+        } else {
+          this.getGame(id);
+        }
+      } catch (error) {        
+        this.showAlertError(
+          true,
+          'please contact the administrator.',
+          'alert',
+          'Fatal Error!',
+          'alert-danger'
+        );
       }
     },
 
-    showJoinMeButton: function (id) {
-      const joined_to = JSON.parse(localStorage.getItem("joined_to"));
+    showJoinMeButton: function(id) {
+      const joined_to = JSON.parse(localStorage.getItem('joined_to'));
       if (!joined_to) {
         return true;
       }
       if (joined_to.includes(id)) {
         return false;
       } else return true;
+    },
+
+    showAlertError(reqE, reqM, aleRol, aleErr, aleClass) {
+      this.request_response = {
+        request_error: reqE,
+        request_msg: reqM,
+        alert_role: aleRol,
+        alert_error_msg: aleErr,
+        alert_class: aleClass,
+      };
+      setTimeout(() => {
+        this.request_response['request_error'] = false;
+      }, 4000);
     },
   },
 };

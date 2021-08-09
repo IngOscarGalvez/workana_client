@@ -24,6 +24,14 @@
         "
       >
         <b-form class="w-100 my-4" @submit.prevent="submitData">
+          <alert-component
+            v-if="request_response.request_error"
+            :response-message="request_response.request_msg"
+            :alert-role="request_response.alert_role"
+            :alert-error-msg="request_response.alert_error_msg"
+            :alert-class="request_response.alert_class"
+          ></alert-component>
+
           <div class="alert alert-danger" role="alert" v-if="show_error">
             <strong>Error!</strong> All fields are required
           </div>
@@ -81,6 +89,7 @@
               :state="passwordState"
               aria-describedby="input-live-help input-live-feedback"
               placeholder="Enter your password"
+              type="password"
               trim
             ></b-form-input>
 
@@ -101,6 +110,7 @@
               :state="confirmPassState"
               aria-describedby="input-live-help input-live-feedback"
               placeholder="Confirm your password"
+              type="password"
               trim
             ></b-form-input>
 
@@ -124,13 +134,24 @@
 </template>
 
 <script>
+import {
+  validateEmail,
+  validatePasswordRegister,
+  validateUserName,
+  checkPassword,
+} from '../helpers/herlpers';
+import AlertComponent from '../components/AlertComponent.vue';
+
 export default {
+  components: {
+    AlertComponent,
+  },
   data() {
     return {
-      name: "",
-      email: "",
-      password: "",
-      password_confirm: "",
+      name: '',
+      email: '',
+      password: '',
+      password_confirm: '',
 
       show_error: false,
       validation: {
@@ -139,6 +160,8 @@ export default {
         password: false,
         password_confirm: false,
       },
+
+      request_response: {},
     };
   },
   methods: {
@@ -161,85 +184,80 @@ export default {
       this.show_error = false;
 
       try {
-        await this.$store.dispatch("register", {
+        let result = await this.$store.dispatch('register', {
           name: this.name,
           email: this.email,
           password: this.password,
           confirmation_password: this.password_confirm,
         });
 
-        window.location.reload();
+        if (typeof result === 'string') {
+          this.showAlertError(
+            true,
+            result,
+            'alert',
+            'Registry Error!',
+            'alert-danger'
+          );
+        } else {
+          window.location.reload();
+        }
       } catch (error) {
-        console.log(error);
-        // error.message || 'error en el registro'
-        // show error message
+        this.showAlertError(
+          true,
+          'please contact the administrator',
+          'alert',
+          'Fatal error!',
+          'alert-danger'
+        );
       }
+    },
+
+    validateFormField(validation, form_data, field_to_validate) {
+      return validation
+        ? (form_data[field_to_validate] = true)
+        : validation === null
+        ? (form_data[field_to_validate] = null)
+        : (form_data[field_to_validate] = false);
+    },
+
+    showAlertError(reqE, reqM, aleRol, aleErr, aleClass) {
+      this.request_response = {
+        request_error: reqE,
+        request_msg: reqM,
+        alert_role: aleRol,
+        alert_error_msg: aleErr,
+        alert_class: aleClass,
+      };
+      setTimeout(() => {
+        this.request_response['request_error'] = false;
+      }, 4000);
     },
   },
 
   computed: {
     nameState() {
-      const nameRegex = new RegExp("^[a-zA-Z ]*$", "g");
-      if (this.name.length == 0) {
-        this.validation.name = false;
-        return null;
-      }
-      if (nameRegex.test(this.name)) {
-        this.validation.name = true;
-        return true;
-      } else {
-        this.validation.name = false;
-        return false;
-      }
+      let result = validateUserName(this.name);
+      return this.validateFormField(result, this.validation, 'name');
     },
 
     emailState() {
-      const emailRegex = new RegExp(
-        "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$"
-      );
-      if (this.email.length == 0) {
-        this.validation.email = false;
-        return null;
-      }
-
-      if (emailRegex.test(this.email)) {
-        this.validation.email = true;
-        return true;
-      }
-
-      this.validation.email = false;
-      return false;
+      let result = validateEmail(this.email);
+      return this.validateFormField(result, this.validation, 'email');
     },
 
     passwordState() {
-      const passRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]{8,15}[^'\s]/;
-
-      if (this.password.length == 0) {
-        this.validation.password = false;
-        return null;
-      }
-      if (passRegex.test(this.password)) {
-        this.validation.password = true;
-        return true;
-      } else {
-        this.validation.password = false;
-        return false;
-      }
+      let result = validatePasswordRegister(this.password);
+      return this.validateFormField(result, this.validation, 'password');
     },
 
     confirmPassState() {
-      if (this.password_confirm.length == 0) {
-        this.validation.password_confirm = false;
-        return null;
-      }
-      if (this.password_confirm == this.password) {
-        this.validation.password_confirm = true;
-        return true;
-      } else {
-        this.validation.password_confirm = false;
-        return false;
-      }
+      let result = checkPassword(this.password, this.password_confirm);
+      return this.validateFormField(
+        result,
+        this.validation,
+        'password_confirm'
+      );
     },
   },
 };

@@ -2,34 +2,51 @@
   <div class="wrapper-rooms">
     <div class="wrapper-content">
       <h1 class="mb-4 text-center text-white">Rooms</h1>
-      <room-component
-        v-for="room in getRooms"
-        :key="room.id"
-        :id="room.id"
-        :name="room.name"
-      ></room-component>
+      <div v-if="getRooms.length > 0">
+        <room-component
+          v-for="room in getRooms"
+          :key="room.id"
+          :id="room.id"
+          :name="room.name"
+        ></room-component>
+      </div>
+
+      <alert-component
+        v-else
+        response-message="There are no rooms available at this time."
+        alert-role="alert"
+        alert-error-msg="Not Found!"
+        alert-class="alert-info"
+      ></alert-component>
     </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-import RoomComponent from "../components/RoomComponent";
+import { mapGetters } from 'vuex';
+import RoomComponent from '../components/RoomComponent';
+import AlertComponent from '../components/AlertComponent';
+
 export default {
   components: {
     RoomComponent,
+    AlertComponent,
+  },
+
+  data() {
+    return {};
   },
 
   computed: {
-    ...mapGetters(["getRooms"]),
+    ...mapGetters('rooms', ['getRooms']),
   },
 
   async beforeCreate() {
-    await this.$store.dispatch("getRooms");
+    await this.$store.dispatch('rooms/getRooms');
   },
 
   mounted() {
-    this.$store.dispatch("autoLogout");
+    this.$store.dispatch('autoLogout');
   },
 };
 </script>

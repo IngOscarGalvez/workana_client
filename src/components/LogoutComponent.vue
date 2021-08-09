@@ -15,7 +15,7 @@ export default {
       try {
         this.$store.dispatch("logout");
       } catch (error) {
-        console.log(error);
+        
       }
     },
     needsAuthentication() {

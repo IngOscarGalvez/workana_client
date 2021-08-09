@@ -6,13 +6,9 @@
         <span><strong>User Name:</strong> {{ name }}</span>
       </p>
     </div>
-    <button
-      class="btn btn-primary set-position-button-value"
-      
-    >
-      {{value}}
+    <button class="btn btn-primary set-position-button-value">
+      {{ value }}
     </button>
-    
   </div>
 </template>
 
@@ -22,26 +18,22 @@ export default {
     name: {
       type: String,
       required: true,
-      description: "user name",
+      description: 'user name',
     },
     id: {
       type: Number,
       required: true,
-      description: "user id",
+      description: 'user id',
     },
     value: {
       type: Number,
       required: true,
-      description: "value",
+      description: 'value',
     },
   },
 
   data() {
     return {};
-  },
-
-  methods: {
-    
   },
 };
 </script>
@@ -107,8 +99,6 @@ export default {
   transition: all 300ms ease-out;
   transform: scale(0.82);
 }
-
-
 
 .set-position-button-value:hover {
   transform: scale(1);

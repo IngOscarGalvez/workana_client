@@ -6,14 +6,21 @@
 </template>
 
 <script>
-import Logout from "./components/LogoutComponent";
+import Logout from './components/LogoutComponent';
+import tokenAuth from './config/tokenAuth';
 
 export default {
   components: {
     Logout,
   },
+
   data() {
     return {};
+  },
+
+ created() {
+    const token = JSON.parse(localStorage.getItem('token'));    
+    if (token) tokenAuth(token);
   },
 };
 </script>

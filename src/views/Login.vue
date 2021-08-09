@@ -24,6 +24,14 @@
         "
       >
         <b-form class="w-100 my-4" @submit.prevent="submitData">
+          <alert-component
+            v-if="request_response.request_error"
+            :response-message="request_response.request_msg"
+            :alert-role="request_response.alert_role"
+            :alert-error-msg="request_response.alert_error_msg"
+            :alert-class="request_response.alert_class"
+          ></alert-component>
+
           <div class="alert alert-danger" role="alert" v-if="show_error">
             <strong>Error!</strong> All fields are required
           </div>
@@ -86,20 +94,28 @@
 </template>
 
 <script>
+import { validateEmail, validatePassword } from '../helpers/herlpers';
+import AlertComponent from '../components/AlertComponent.vue';
+
 export default {
+  components: {
+    AlertComponent,
+  },
   data() {
     return {
-      name: "",
-      email: "",
-      password: "",
+      name: '',
+      email: '',
+      password: '',
 
       email_validated: false,
+      password_validated: false,
       show_error: false,
+      request_response: {},
     };
   },
   methods: {
     async submitData() {
-      if (!this.email_validated || this.password.length < 4) {
+      if (!this.email_validated || !this.password_validated) {
         this.show_error = true;
         setTimeout(() => {
           this.show_error = false;
@@ -110,45 +126,64 @@ export default {
       this.show_error = false;
 
       try {
-        await this.$store.dispatch("login", {
+        let result = await this.$store.dispatch('login', {
           email: this.email,
           password: this.password,
         });
 
-        // this.$route.push("/rooms");
-        window.location.reload();
-      } catch (error) {
-        console.log(error);
-        // show error message
+        if (typeof result === 'string') {
+          this.showAlertError(
+            true,
+            result,
+            'alert',
+            'Authentication Error!',
+            'alert-danger'
+          );
+        } else {
+          window.location.reload();
+        }
+      } catch (error) {        
+        this.showAlertError(
+          true,
+          'please contact the administrator',
+          'alert',
+          'Fatal error!',
+          'alert-danger'
+        );
       }
+    },
+
+    showAlertError(reqE, reqM, aleRol, aleErr, aleClass) {
+      this.request_response = {
+        request_error: reqE,
+        request_msg: reqM,
+        alert_role: aleRol,
+        alert_error_msg: aleErr,
+        alert_class: aleClass,
+      };
+      setTimeout(() => {
+        this.request_response['request_error'] = false;
+      }, 4000);
     },
   },
 
   computed: {
     emailState() {
-      const emailRegex = new RegExp(
-        "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:.[a-zA-Z0-9-]+)*$"
-      );
-      if (this.email.length == 0) {
-        this.email_validated = false;
-        return null;
-      }
-
-      if (emailRegex.test(this.email)) {
-        this.email_validated = true;
-        return true;
-      }
-
-      this.email_validated = false;
-      return false;
+      let result = validateEmail(this.email);
+      return result
+        ? (this.email_validated = true)
+        : result === null
+        ? (this.email_validated = null)
+        : (this.email_validated = false);
     },
 
     passwordState() {
-      return this.password.length > 7
-        ? true
-        : this.password.length == 0
-        ? null
-        : false;
+      let result = validatePassword(this.password);
+      return result
+        ? (this.password_validated = true)
+        : result === null
+        ? (this.password_validated = null)
+        : (this.password_validated = false);
     },
   },
 };
